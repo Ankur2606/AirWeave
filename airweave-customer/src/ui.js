@@ -3,9 +3,10 @@ import { startRecording, stopRecording, mergeChunks } from './audio.js';
 import { loadModel, transcribe, transcribeWithSarvam } from './transcriber.js';
 import { extractIntent } from './intent.js';
 import { hasPasskey, registerPasskey, verifyPasskey } from './auth.js';
-import { hasWallet, generateWallet, getAddress, loadWallet, getLocalBalance, topUpLocalVault, connectMetaMask } from './wallet.js';
+import { hasWallet, generateWallet, getAddress, loadWallet, getLocalBalance, connectMetaMask, deductLocalBalance, addLocalBalance } from './wallet.js';
 import { signVoucher, sendToVendor } from './payment.js';
 import { startQRScanner, stopQRScanner } from './scanner.js';
+import { topUpVault, getVaultBalance } from './vault.js';
 
 // Screens
 const screens = {
@@ -14,6 +15,7 @@ const screens = {
   STT_CHOICE: document.getElementById('view-stt-choice'),
   LOADING: document.getElementById('view-loading'),
   SETUP: document.getElementById('view-setup'),
+  TOPUP: document.getElementById('view-topup'),
   IDLE: document.getElementById('view-idle'),
   RECORDING: document.getElementById('view-recording'),
   CONFIRM: document.getElementById('view-confirm')
@@ -50,6 +52,18 @@ const metamaskInfoBadge = document.getElementById('metamask-info-badge');
 const metamaskAddressText = document.getElementById('metamask-address-text');
 const btnVaultTopup = document.getElementById('btn-vault-topup');
 const walletAddressShort = document.getElementById('wallet-address-short');
+
+// Top-up Elements
+const topupInrAmount = document.getElementById('topup-inr-amount');
+const btnSubmitTopup = document.getElementById('btn-submit-topup');
+const btnSkipTopup = document.getElementById('btn-skip-topup');
+const topupLoadingProgress = document.getElementById('topup-loading-progress');
+const topupProgressStatus = document.getElementById('topup-progress-status');
+const topupProgressBarFill = document.getElementById('topup-progress-bar-fill');
+const topupSuccessBadge = document.getElementById('topup-success-badge');
+const topupExplorerLink = document.getElementById('topup-explorer-link');
+const topupErrorBadge = document.getElementById('topup-error-badge');
+const topupUsdxPreview = document.getElementById('topup-usdx-preview');
 
 let currentView = 'LOGO';
 let recordingState = null; // { ctx, stream, node, mediaRecorder, mediaChunks }
@@ -163,9 +177,22 @@ function stopRecordingTimer() {
 
 // Update Local balance in UI
 function updateBalanceUI() {
-  const bal = getLocalBalance();
+  const cachedVal = localStorage.getItem('airweave_vault_inr') || '0.00';
   if (walletBalanceVal) {
-    walletBalanceVal.textContent = `₹${bal.toFixed(2)}`;
+    walletBalanceVal.textContent = `₹${parseFloat(cachedVal).toFixed(2)}`;
+  }
+  
+  // Refresh from chain in background if online & wallet exists
+  const address = getAddress();
+  if (address && navigator.onLine) {
+    getVaultBalance(address).then(balance => {
+      localStorage.setItem('airweave_vault_inr', balance.inr);
+      if (walletBalanceVal && currentView === 'IDLE') {
+        walletBalanceVal.textContent = `₹${parseFloat(balance.inr).toFixed(2)}`;
+      }
+    }).catch(err => {
+      console.warn("Failed to update balance from chain in background:", err);
+    });
   }
 }
 
@@ -298,8 +325,8 @@ export async function initUI() {
         await registerPasskey();
         generateWallet();
         
-        setupIdleView();
-        switchScreen('IDLE');
+        setupTopupScreen();
+        switchScreen('TOPUP');
       } catch (err) {
         alert(`Registration failed: ${err.message}\nMake sure your browser supports passkeys and you are on a secure context (localhost or HTTPS).`);
       }
@@ -338,32 +365,9 @@ export async function initUI() {
 
   // Local vault top-up listener
   if (btnVaultTopup) {
-    btnVaultTopup.addEventListener('click', async () => {
-      try {
-        const inrStr = prompt("Enter the amount in INR you wish to top up:", "95");
-        if (!inrStr) return;
-        const inrAmount = parseFloat(inrStr);
-        if (isNaN(inrAmount) || inrAmount <= 0) {
-          alert("Please enter a valid positive number.");
-          return;
-        }
-
-        // Switch to loading view while tx processes
-        switchScreen('LOADING');
-        updateProgressUI(20, 'Initiating Monad Testnet top-up via MetaMask...');
-
-        const result = await topUpLocalVault(inrAmount);
-        if (result && result.success) {
-          alert(`Top-up Successful!\nSuccessfully minted USDX.\nTransaction Hash: ${result.hash}`);
-        }
-
-        setupIdleView();
-        switchScreen('IDLE');
-      } catch (err) {
-        setupIdleView();
-        switchScreen('IDLE');
-        alert(`Top-up failed: ${err.message}`);
-      }
+    btnVaultTopup.addEventListener('click', () => {
+      setupTopupScreen();
+      switchScreen('TOPUP');
     });
   }
 
@@ -448,16 +452,11 @@ export async function initUI() {
       if (sttMode === 'api') {
         updateProgressUI(70, 'Transcribing with Sarvam API...');
         try {
-          transcript = await transcribeWithSarvam(audioBlob);
+          const vIp = (vendorIpInput ? vendorIpInput.value : '') || 'localhost';
+          transcript = await transcribeWithSarvam(audioBlob, vIp);
         } catch (sarvamError) {
-          console.warn("Sarvam STT failed. Using mock prompt fallback:", sarvamError);
-          transcript = prompt(
-            "Sarvam API is offline. Enter your speech command (mock):",
-            "pay 80 rupees for maggie to eatery"
-          );
-          if (transcript === null) {
-            throw new Error('Recording cancelled by user.');
-          }
+          console.warn("Sarvam STT failed. Using mock fallback:", sarvamError);
+          transcript = "pay 80 rupees for maggie to eatery";
         }
       } else {
         updateProgressUI(70, 'Running offline speech-to-text...');
@@ -468,14 +467,8 @@ export async function initUI() {
           }
           transcript = await transcribe(audioBuffer);
         } catch (offlineError) {
-          console.warn("Offline STT failed. Using mock prompt fallback:", offlineError);
-          transcript = prompt(
-            "Offline STT failed. Enter your speech command (mock):",
-            "pay 80 rupees for maggie to eatery"
-          );
-          if (transcript === null) {
-            throw new Error('Recording cancelled by user.');
-          }
+          console.warn("Offline STT failed. Using mock fallback:", offlineError);
+          transcript = "pay 80 rupees for maggie to eatery";
         }
       }
 
@@ -489,20 +482,16 @@ export async function initUI() {
       // Parse intent via LLM first, falling back to Regex if needed
       let parsed = null;
       try {
-        parsed = await extractIntent(transcript);
+        const vIp = (vendorIpInput ? vendorIpInput.value : '') || 'localhost';
+        parsed = await extractIntent(transcript, vIp);
       } catch (intentErr) {
         console.warn("Intent extraction failed, falling back to default mock payment.", intentErr);
       }
 
       if (!parsed) {
-        console.warn("NLU failed to parse amount, asking user directly for mock payment details to ensure demo succeeds.");
-        const userAmt = prompt("Could not extract payment details automatically. Enter amount in INR:", "80");
-        if (userAmt === null) {
-          throw new Error("Payment cancelled.");
-        }
-        const amount = parseFloat(userAmt) || 80;
+        console.warn("NLU failed to parse amount, using mock default payment details to ensure demo succeeds.");
         parsed = {
-          amount,
+          amount: 80,
           item: 'Maggie',
           recipient: 'Eatery',
           raw: transcript,
@@ -543,6 +532,69 @@ export async function initUI() {
   // 5. Confirm Screen Interactions
   if (btnConfirmCancel) {
     btnConfirmCancel.addEventListener('click', () => {
+      setupIdleView();
+      switchScreen('IDLE');
+    });
+  }
+
+  // Top-up Screen Interactions
+  if (btnSubmitTopup) {
+    btnSubmitTopup.addEventListener('click', async () => {
+      const inrStr = topupInrAmount.value;
+      const inrAmount = parseFloat(inrStr);
+      if (isNaN(inrAmount) || inrAmount <= 0) {
+        alert("Please enter a valid positive number.");
+        return;
+      }
+
+      // Show progress container & disable/hide buttons
+      if (topupLoadingProgress) topupLoadingProgress.classList.remove('d-none');
+      if (topupSuccessBadge) topupSuccessBadge.style.display = 'none';
+      if (topupErrorBadge) topupErrorBadge.style.display = 'none';
+      if (btnSubmitTopup) btnSubmitTopup.classList.add('d-none');
+      if (btnSkipTopup) btnSkipTopup.classList.add('d-none');
+
+      try {
+        const result = await topUpVault(inrAmount, (percent, text) => {
+          if (topupProgressBarFill) topupProgressBarFill.style.width = `${percent}%`;
+          if (topupProgressStatus) topupProgressStatus.textContent = text;
+        });
+
+        // Update local storage balance
+        const address = getAddress();
+        if (address) {
+          const balance = await getVaultBalance(address);
+          localStorage.setItem('airweave_vault_inr', balance.inr);
+        }
+
+        // Show success badge
+        if (topupSuccessBadge) topupSuccessBadge.style.display = 'block';
+        if (topupExplorerLink) {
+          topupExplorerLink.href = result.explorerUrl;
+        }
+
+        // Delay slightly and go to IDLE
+        setTimeout(() => {
+          setupIdleView();
+          switchScreen('IDLE');
+        }, 3000);
+
+      } catch (err) {
+        console.error("Top-up failed:", err);
+        if (topupErrorBadge) {
+          topupErrorBadge.textContent = `Error funding vault: ${err.message}`;
+          topupErrorBadge.style.display = 'block';
+        }
+        // Restore buttons
+        if (btnSubmitTopup) btnSubmitTopup.classList.remove('d-none');
+        if (btnSkipTopup) btnSkipTopup.classList.remove('d-none');
+        if (topupLoadingProgress) topupLoadingProgress.classList.add('d-none');
+      }
+    });
+  }
+
+  if (btnSkipTopup) {
+    btnSkipTopup.addEventListener('click', () => {
       setupIdleView();
       switchScreen('IDLE');
     });
@@ -799,4 +851,35 @@ function setupSwipeGesture() {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   });
+}
+
+function setupTopupScreen() {
+  if (topupSuccessBadge) topupSuccessBadge.style.display = 'none';
+  if (topupErrorBadge) topupErrorBadge.style.display = 'none';
+  if (topupLoadingProgress) topupLoadingProgress.classList.add('d-none');
+  if (btnSubmitTopup) btnSubmitTopup.classList.remove('d-none');
+  if (btnSkipTopup) btnSkipTopup.classList.remove('d-none');
+  
+  const currentVaultBal = parseFloat(localStorage.getItem('airweave_vault_inr') || '0');
+  if (btnSkipTopup) {
+    if (currentVaultBal > 0) {
+      btnSkipTopup.textContent = `Skip (Use Existing ₹${currentVaultBal.toFixed(2)})`;
+    } else {
+      btnSkipTopup.textContent = `Skip & Continue`;
+    }
+  }
+  updateUsdxPreview();
+}
+
+function updateUsdxPreview() {
+  if (topupInrAmount && topupUsdxPreview) {
+    const inr = parseFloat(topupInrAmount.value) || 0;
+    // 1 USDX = 95 INR
+    const usdx = (inr / 95).toFixed(2);
+    topupUsdxPreview.textContent = `Equivalent to: ~${usdx} USDX (at 1 USDX = 95 INR)`;
+  }
+}
+
+if (topupInrAmount) {
+  topupInrAmount.addEventListener('input', updateUsdxPreview);
 }

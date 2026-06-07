@@ -48,28 +48,32 @@ export async function transcribe(audioFloat32Array, onProgress) {
   return result.text.trim();
 }
 
-export async function transcribeWithSarvam(audioBlob) {
-  const apiKey = import.meta.env.VITE_SARVAM_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing VITE_SARVAM_API_KEY environment variable.");
+export async function transcribeWithSarvam(audioBlob, vendorIp = 'localhost') {
+  let ip = vendorIp.trim();
+  if (ip.startsWith('http://')) {
+    ip = ip.substring(7);
   }
+  if (ip.startsWith('https://')) {
+    ip = ip.substring(8);
+  }
+  if (ip.endsWith('/')) {
+    ip = ip.substring(0, ip.length - 1);
+  }
+  const host = ip.includes(':') ? ip : `${ip}:3000`;
+  const url = `http://${host}/api/transcribe`;
+
+  console.log(`Forwarding speech transcription request to local vendor server proxy: ${url}`);
 
   const formData = new FormData();
-  // We append it as audio/wav since Saaras v3 handles common wav/webm formats
   formData.append('file', audioBlob, 'recording.wav');
-  formData.append('model', 'saaras:v3');
-  formData.append('mode', 'transcribe');
 
-  const res = await fetch('https://api.sarvam.ai/speech-to-text', {
+  const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'api-subscription-key': apiKey
-    },
     body: formData,
   });
 
   if (!res.ok) {
-    throw new Error(`Sarvam STT API failed: ${res.status} ${res.statusText}`);
+    throw new Error(`Vendor transcribe proxy failed: ${res.status} ${res.statusText}`);
   }
 
   const data = await res.json();

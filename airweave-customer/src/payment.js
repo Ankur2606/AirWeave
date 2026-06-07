@@ -13,11 +13,13 @@ const VOUCHER_TYPES = {
   ]
 };
 
+import { VAULT_ADDRESS } from './contracts.js';
+
 const DOMAIN = {
   name: 'AirWeave',
   version: '1',
   chainId: CHAIN_ID,
-  // verifyingContract will be added after MonadAirVault is deployed in Phase 2
+  verifyingContract: VAULT_ADDRESS,
 };
 
 export async function signVoucher({ wallet, vendorAddress, amountINR }) {
@@ -92,5 +94,29 @@ export async function sendToVendor({ voucher, signature, vendorIp = '192.168.43.
     throw new Error(errorText || `HTTP error ${res.status}`);
   }
 
-  return res.json();
+  const result = await res.json();
+  
+  if (result && result.success) {
+    // 1. Update local balance cache (optimistic — vendor confirmed receipt)
+    const amountInr = Number(voucher.amountINR) / 100;
+    const currentInr = parseFloat(localStorage.getItem('airweave_vault_inr') || '0');
+    const newInr = Math.max(0, currentInr - amountInr);
+    localStorage.setItem('airweave_vault_inr', newInr.toFixed(2));
+
+    // 2. Store the pending voucher for settlement tracking
+    const pending = JSON.parse(localStorage.getItem('airweave_pending') || '[]');
+    pending.push({
+      from: voucher.from,
+      to: voucher.to,
+      amountINR: voucher.amountINR.toString(), // Paise
+      nonce: voucher.nonce.toString(),
+      expiry: voucher.expiry.toString(),
+      signature: signature,
+      timestamp: Date.now(),
+      status: 'pending'
+    });
+    localStorage.setItem('airweave_pending', JSON.stringify(pending));
+  }
+
+  return result;
 }

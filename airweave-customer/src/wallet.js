@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 const STORAGE_KEY = 'airweave_wallet_enc';
-const BALANCE_KEY = 'airweave_balance_inr';
+const BALANCE_KEY = 'airweave_vault_inr';
 
 const USDX_ADDRESS = '0x94C647a5d232769705707925d551E99618E2688c';
 const USDX_ABI = [

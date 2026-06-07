@@ -157,6 +157,49 @@
       </div>
     </section>
 
+    <!-- TOPUP SCREEN (Fund personal escrow vault) -->
+    <section class="setup-view d-none" id="view-topup">
+      <div>
+        <div class="welcome-emoji">💳</div>
+        <h2>Fund Your Local Vault</h2>
+        <p class="mt-1">Before going offline, pre-deposit USDX into your Monad collateral vault. Total spending will be capped at 60% of this balance to prevent exchange rate volatility.</p>
+      </div>
+
+      <div class="glass-panel mt-2">
+        <div class="input-group">
+          <label for="topup-inr-amount">INR Amount to Add (₹)</label>
+          <input type="number" id="topup-inr-amount" class="input-field" value="500" placeholder="e.g. 500">
+          <small class="mt-1" style="display:block; opacity:0.6; font-size:0.75rem;" id="topup-usdx-preview">
+            Equivalent to: ~5.26 USDX (at 1 USDX = 95 INR)
+          </small>
+        </div>
+
+        <div class="progress-container d-none" id="topup-loading-progress" style="margin: 1.5rem 0 1rem 0;">
+          <p id="topup-progress-status" style="font-size: 0.85rem; margin-bottom: 0.5rem; text-align: center; color: var(--color-accent-cyan);">Minting USDX...</p>
+          <div class="progress-bar" style="background: rgba(255, 255, 255, 0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="topup-progress-bar-fill" style="background: linear-gradient(90deg, var(--color-accent-violet), var(--color-accent-cyan)); width: 0%; height: 100%; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+
+        <div class="mt-1" id="topup-success-badge" style="display:none; text-align:center; padding:0.75rem; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);">
+          <span style="color:#10b981; font-weight:600; display:block;">Vault Funded Successfully!</span>
+          <a id="topup-explorer-link" href="#" target="_blank" style="color:var(--color-accent-cyan); font-size:0.8rem; text-decoration:underline; display:block; margin-top:0.35rem;">View Transaction on Explorer</a>
+        </div>
+
+        <div class="mt-1" id="topup-error-badge" style="display:none; text-align:center; padding:0.75rem; border-radius:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444; font-size:0.85rem;">
+          Error funding vault. Please try again.
+        </div>
+
+        <button class="btn btn-primary mt-2" id="btn-submit-topup" style="width: 100%">
+          Fund Vault & Continue
+        </button>
+        
+        <button class="btn btn-secondary mt-1" id="btn-skip-topup" style="width: 100%">
+          Skip (Use Existing Cache)
+        </button>
+      </div>
+    </section>
+
     <!-- IDLE SCREEN (BALANCE/TOPUP) -->
     <section class="idle-view d-none" id="view-idle">
       <div class="wallet-card">
