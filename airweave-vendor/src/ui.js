@@ -71,6 +71,25 @@ function initSSE() {
         } catch (audioErr) {
           console.warn("Auto playback of voice confirmation was prevented:", audioErr);
         }
+      } else if (data.lastAmountINR) {
+        // Fallback to Web Speech API speechSynthesis for demo when Sarvam API is down
+        try {
+          const itemName = data.lastItemName || 'भुगतान';
+          const text = `${itemName} के लिए ${data.lastAmountINR} रुपये प्राप्त हुए।`;
+          console.log(`Fallback Speech Synthesis: "${text}"`);
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'hi-IN';
+          
+          // Try to find a Hindi voice, otherwise use default
+          const voices = window.speechSynthesis.getVoices();
+          const hiVoice = voices.find(v => v.lang.startsWith('hi'));
+          if (hiVoice) {
+            utterance.voice = hiVoice;
+          }
+          window.speechSynthesis.speak(utterance);
+        } catch (synthErr) {
+          console.warn("Web Speech API Synthesis failed:", synthErr);
+        }
       }
 
       // Render vouchers table

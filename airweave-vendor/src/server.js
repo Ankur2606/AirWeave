@@ -42,7 +42,7 @@ function getLocalIp() {
 // Active SSE client connections
 let sseClients = [];
 
-function broadcastUpdate(audioB64 = null) {
+function broadcastUpdate(audioB64 = null, lastAmountINR = null, lastItemName = null) {
   const pending = getAllVouchers(); // Show all vouchers received
   const total = pending
     .filter(v => v.status === 'pending')
@@ -53,7 +53,9 @@ function broadcastUpdate(audioB64 = null) {
     totalINR: total / 100, // convert paise back to INR
     vendorAddress: VENDOR_ADDRESS,
     ip: getLocalIp(),
-    audioB64
+    audioB64,
+    lastAmountINR,
+    lastItemName
   });
 
   sseClients.forEach(client => {
@@ -174,7 +176,7 @@ app.post('/pay', async (req, res) => {
     const audioB64 = await generatePaymentAudio(amountDecimal, itemName);
 
     // Broadcast update to dashboard UI (include the audio so the browser dashboard can play it)
-    broadcastUpdate(audioB64);
+    broadcastUpdate(audioB64, amountDecimal, itemName);
 
     res.json({ success: true, amountINR: amountDecimal, audioB64 });
   } catch (dbErr) {
