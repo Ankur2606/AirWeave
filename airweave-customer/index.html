@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,17 +11,20 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" href="/icon-192.png">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  
+
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- jsQR for camera scanning -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  
+
   <link rel="stylesheet" href="/src/index.css">
 </head>
+
 <body>
   <div id="app">
     <!-- Header (always visible on core screens) -->
@@ -30,7 +34,10 @@
       </div>
       <div style="display: flex; gap: 0.5rem; align-items: center;">
         <button class="btn-metamask-connect" id="btn-metamask">
-          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z"/></svg>
+          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24">
+            <path
+              d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z" />
+          </svg>
           <span id="metamask-status-text">Connect MetaMask</span>
         </button>
       </div>
@@ -47,14 +54,14 @@
                 <stop offset="100%" stop-color="#06b6d4" />
               </linearGradient>
               <filter id="glow">
-                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                <feGaussianBlur stdDeviation="5" result="coloredBlur" />
                 <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
             </defs>
-            <path d="M20,80 L50,20 L80,80 L65,80 L50,45 L35,80 Z" fill="url(#logo-grad)" filter="url(#glow)"/>
+            <path d="M20,80 L50,20 L80,80 L65,80 L50,45 L35,80 Z" fill="url(#logo-grad)" filter="url(#glow)" />
           </svg>
         </div>
         <h1 class="logo-title mt-2">AirWeave</h1>
@@ -132,14 +139,19 @@
       <div>
         <div class="welcome-emoji">🔐</div>
         <h2>Welcome to AirWeave</h2>
-        <p class="mt-1">AirWeave enables secure, offline-first voice payments. Let's register biometrics and generate your Monad wallet.</p>
+        <p class="mt-1">AirWeave enables secure, offline-first voice payments. Let's register biometrics and generate
+          your Monad wallet.</p>
       </div>
-      
+
       <div class="glass-panel mt-2">
         <h3 class="mb-1">Secure Enrollment</h3>
-        <p class="mb-2">Your private keys are secured locally on your device and are only accessible via your fingerprint or face scan.</p>
+        <p class="mb-2">Your private keys are secured locally on your device and are only accessible via your
+          fingerprint or face scan.</p>
         <button class="btn btn-primary" id="btn-register-biometrics">
-          <svg style="width:20px;height:20px;fill:currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z"/></svg>
+          <svg style="width:20px;height:20px;fill:currentColor" viewBox="0 0 24 24">
+            <path
+              d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z" />
+          </svg>
           Register Passkey & Wallet
         </button>
       </div>
@@ -150,11 +162,14 @@
       <div class="wallet-card">
         <span class="wallet-balance-label">Local Vault Balance</span>
         <span class="wallet-balance-value" id="wallet-balance-val">₹0.00</span>
-        
+
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:0.5rem;">
           <div class="wallet-address" id="wallet-address-badge" title="Click to copy wallet address">
             <span id="wallet-address-short">Loading...</span>
-            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/></svg>
+            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24">
+              <path
+                d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" />
+            </svg>
           </div>
           <button class="topup-pill-btn" id="btn-vault-topup">
             💳 Top Up
@@ -174,7 +189,8 @@
         </div>
         <div class="input-group">
           <label for="vendor-address">Vendor Monad Address</label>
-          <input type="text" id="vendor-address" class="input-field" value="0x264f3D6883F932f273558ab0cF078d473941F2A4" placeholder="0x...">
+          <input type="text" id="vendor-address" class="input-field" value="0x264f3D6883F932f273558ab0cF078d473941F2A4"
+            placeholder="0x...">
         </div>
       </div>
 
@@ -183,7 +199,8 @@
           <div class="mic-pulse-ring"></div>
           <button class="mic-button" id="btn-mic">
             <svg viewBox="0 0 24 24">
-              <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+              <path
+                d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z" />
             </svg>
           </button>
         </div>
@@ -201,7 +218,8 @@
       <div class="timer-ring-container">
         <svg class="timer-svg" viewBox="0 0 100 100">
           <circle class="timer-circle-bg" cx="50" cy="50" r="40"></circle>
-          <circle class="timer-circle-fg" id="timer-circle" cx="50" cy="50" r="40" transform="rotate(-90 50 50)"></circle>
+          <circle class="timer-circle-fg" id="timer-circle" cx="50" cy="50" r="40" transform="rotate(-90 50 50)">
+          </circle>
         </svg>
         <div class="timer-text" id="timer-countdown-text">8s</div>
       </div>
@@ -212,7 +230,8 @@
         <div class="waveform-circle c3"></div>
       </div>
 
-      <span class="mic-prompt" id="btn-recording-stop" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:0.5rem 1rem; border-radius:99px; border:1px solid var(--color-card-border)">
+      <span class="mic-prompt" id="btn-recording-stop"
+        style="cursor:pointer; background:rgba(255,255,255,0.05); padding:0.5rem 1rem; border-radius:99px; border:1px solid var(--color-card-border)">
         Tap to Stop early
       </span>
     </section>
@@ -222,30 +241,33 @@
       <div>
         <div class="payment-details">
           <p>Sending USDX Voucher</p>
-          <div class="payment-amount" id="confirm-amount">₹35</div>
+          <div class="payment-amount" id="confirm-amount">₹80</div>
           <div class="payment-item-recipient mt-1">
-            <span id="confirm-item-label">for Product</span>
-            <span id="confirm-recipient-label">to Bhaiya</span>
+            <span id="confirm-item-label">for Maggie</span>
+            <span id="confirm-recipient-label">to Eatery</span>
           </div>
-          <div class="payment-vendor" id="confirm-vendor-label">to Chai Wala</div>
+          <div class="payment-vendor" id="confirm-vendor-label">to Eatery</div>
           <div class="payment-vendor-addr" id="confirm-vendor-address">0x264f3D...F2A4</div>
         </div>
 
         <div class="glass-panel text-center" id="confirm-transcription-box">
-          <p class="mb-1" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Speech Detected</p>
-          <span style="font-style: italic" id="confirm-transcription">"pay thirty five rupees"</span>
+          <p class="mb-1" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Speech Detected
+          </p>
+          <span style="font-style: italic" id="confirm-transcription">"pay eighty rupees for maggie to eatery"</span>
         </div>
       </div>
 
       <div class="swipe-track" id="swipe-track">
         <div class="swipe-glow-bg"></div>
         <div class="swipe-arrow">
-          <svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z"/></svg>
+          <svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24">
+            <path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
+          </svg>
         </div>
-        <div class="swipe-text">SWIPE UP TO CONFIRM</div>
+        <div class="swipe-text"></div>
         <div class="swipe-handle" id="swipe-handle">
           <svg viewBox="0 0 24 24">
-            <path d="M12,18A6,6 0 1,1 18,12A6,6 0 0,1 12,18M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z"/>
+            <path d="M12,18A6,6 0 1,1 18,12A6,6 0 0,1 12,18M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z" />
           </svg>
         </div>
       </div>
@@ -262,7 +284,8 @@
       </div>
       <div>
         <h2 id="success-title">Payment Signed</h2>
-        <p class="mt-1" id="success-message">Your voucher has been signed and transferred to the vendor successfully.</p>
+        <p class="mt-1" id="success-message">Your voucher has been signed and transferred to the vendor successfully.
+        </p>
       </div>
       <button class="btn btn-primary d-none" id="btn-success-close">Done</button>
     </div>
@@ -282,4 +305,5 @@
     }
   </script>
 </body>
+
 </html>

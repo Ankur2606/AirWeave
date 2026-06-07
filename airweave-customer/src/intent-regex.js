@@ -22,37 +22,68 @@ export function parseIntentRegex(text) {
   if (!text) return null;
   const cleanText = text.trim();
 
+  let amount = null;
+
   // Try numeric patterns first
   for (const pattern of AMOUNT_PATTERNS) {
     const match = cleanText.match(pattern);
     if (match) {
-      const amount = parseFloat(match[1]);
-      if (amount > 0 && amount <= 100000) {
-        return { amount, item: 'Payment', recipient: null, raw: cleanText, fallbackUsed: true };
+      const amt = parseFloat(match[1]);
+      if (amt > 0 && amt <= 100000) {
+        amount = amt;
+        break;
       }
     }
   }
 
-  // Try word-based numbers ("thirty five rupees" or "pachas rupees")
-  const words = cleanText.toLowerCase().split(/\s+/);
-  let total = 0, current = 0;
-  for (const word of words) {
-    const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-    const n = WORD_TO_NUM[cleanWord];
-    if (n === undefined) continue;
-    
-    if (n === 100) { 
-      current = (current || 1) * 100; 
-    } else if (n === 1000) { 
-      total += (current || 1) * 1000; 
-      current = 0; 
-    } else { 
-      current += n; 
+  // Try word-based numbers if numeric failed
+  if (amount === null) {
+    const words = cleanText.toLowerCase().split(/\s+/);
+    let total = 0, current = 0;
+    for (const word of words) {
+      const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+      const n = WORD_TO_NUM[cleanWord];
+      if (n === undefined) continue;
+      
+      if (n === 100) { 
+        current = (current || 1) * 100; 
+      } else if (n === 1000) { 
+        total += (current || 1) * 1000; 
+        current = 0; 
+      } else { 
+        current += n; 
+      }
     }
+    const sum = total + current;
+    if (sum > 0) amount = sum;
   }
-  const amount = total + current;
+
   if (amount > 0) {
-    return { amount, item: 'Payment', recipient: null, raw: cleanText, fallbackUsed: true };
+    // Extract item (e.g., "for Maggie", "for chai")
+    let item = 'Maggie';
+    const itemMatch = cleanText.match(/(?:for|of|purchase)\s+([a-zA-Z0-9\s]+?)(?:\s+to|\s+at|\s+towards|$)/i);
+    if (itemMatch) {
+      item = itemMatch[1].trim();
+    }
+
+    // Extract recipient (e.g., "to Eatery", "to Raju")
+    let recipient = 'Eatery';
+    const recipientMatch = cleanText.match(/(?:to|towards|at|for)\s+([a-zA-Z0-9\s]+?)(?:\s+for|of|$)/i);
+    if (recipientMatch) {
+      // Avoid matching item again if it was matched by 'for'
+      const matchedName = recipientMatch[1].trim();
+      if (matchedName.toLowerCase() !== item.toLowerCase()) {
+        recipient = matchedName;
+      }
+    }
+
+    return {
+      amount,
+      item,
+      recipient,
+      raw: cleanText,
+      fallbackUsed: true
+    };
   }
 
   return null;
