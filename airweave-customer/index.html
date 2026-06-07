@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AirWeave Pay</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- jsQR for camera scanning -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  
+  <link rel="stylesheet" href="/src/index.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header (always visible on core screens) -->
+    <header class="app-header d-none" id="global-header">
+      <div class="app-brand">
+        <img src="/icon-192.png" alt="AirWeave Logo" class="app-logo">
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <button class="btn-metamask-connect" id="btn-metamask">
+          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z"/></svg>
+          <span id="metamask-status-text">Connect MetaMask</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. LOGO SCREEN -->
+    <section class="logo-view" id="view-logo">
+      <div class="logo-container">
+        <div class="glowing-logo">
+          <svg viewBox="0 0 100 100" class="logo-svg" style="width:120px;height:120px;">
+            <defs>
+              <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7c3aed" />
+                <stop offset="100%" stop-color="#06b6d4" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <path d="M20,80 L50,20 L80,80 L65,80 L50,45 L35,80 Z" fill="url(#logo-grad)" filter="url(#glow)"/>
+          </svg>
+        </div>
+        <h1 class="logo-title mt-2">AirWeave</h1>
+        <p class="logo-tagline mt-1">Offline. Trustless. Instant.</p>
+      </div>
+    </section>
+
+    <!-- 2. CAMERA / QR SCAN SCREEN -->
+    <section class="camera-view d-none" id="view-camera">
+      <div class="scanner-header text-center">
+        <h2>Scan Vendor QR Code</h2>
+        <p class="mt-1">Align the vendor's dashboard QR code to establish the connection link</p>
+      </div>
+      <div class="viewfinder-container">
+        <video id="scanner-video" playsinline style="display:none"></video>
+        <canvas id="scanner-canvas" class="viewfinder-canvas"></canvas>
+        <div class="viewfinder-overlay">
+          <div class="viewfinder-corner top-left"></div>
+          <div class="viewfinder-corner top-right"></div>
+          <div class="viewfinder-corner bottom-left"></div>
+          <div class="viewfinder-corner bottom-right"></div>
+        </div>
+      </div>
+      <div class="scanner-footer text-center">
+        <span class="scanner-status" id="scanner-status-text">Starting video capture...</span>
+        <button class="btn btn-secondary mt-2" id="btn-skip-scan">Skip (Dev Mode)</button>
+      </div>
+    </section>
+
+    <!-- 3. STT CHOICE SCREEN -->
+    <section class="choice-view d-none" id="view-stt-choice">
+      <div class="text-center">
+        <div class="welcome-emoji">🎙️</div>
+        <h2>Configure Speech Engine</h2>
+        <p class="mt-1">Select your preferred transcription intelligence path</p>
+      </div>
+
+      <div class="choice-cards-container mt-2">
+        <div class="glass-panel choice-card" id="btn-stt-edge">
+          <div class="choice-icon">📱</div>
+          <div class="choice-content">
+            <h3>Edge Model</h3>
+            <p>100% offline local AI (Moonshine ONNX) cached on your device.</p>
+          </div>
+        </div>
+
+        <div class="glass-panel choice-card mt-1" id="btn-stt-api">
+          <div class="choice-icon">⚡</div>
+          <div class="choice-content">
+            <h3>Sarvam API</h3>
+            <p>Fast, high-accuracy cloud transcription (Saaras v3). Best for mixed Hindi & English.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOADING SCREEN (for Edge Model downloads) -->
+    <section class="loading-view d-none" id="view-loading">
+      <div class="spinner-box">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+      <div>
+        <h2 class="mb-1">Initializing Speech Model</h2>
+        <p id="loading-status-text">Loading local speech intelligence...</p>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="loading-progress-bar"></div>
+      </div>
+    </section>
+
+    <!-- SETUP SCREEN (Biometrics enrolment) -->
+    <section class="setup-view d-none" id="view-setup">
+      <div>
+        <div class="welcome-emoji">🔐</div>
+        <h2>Welcome to AirWeave</h2>
+        <p class="mt-1">AirWeave enables secure, offline-first voice payments. Let's register biometrics and generate your Monad wallet.</p>
+      </div>
+      
+      <div class="glass-panel mt-2">
+        <h3 class="mb-1">Secure Enrollment</h3>
+        <p class="mb-2">Your private keys are secured locally on your device and are only accessible via your fingerprint or face scan.</p>
+        <button class="btn btn-primary" id="btn-register-biometrics">
+          <svg style="width:20px;height:20px;fill:currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18c-2.67,0-8,1.34-8,4v2H20V22c0-2.66-5.33-4-8-4Z"/></svg>
+          Register Passkey & Wallet
+        </button>
+      </div>
+    </section>
+
+    <!-- IDLE SCREEN (BALANCE/TOPUP) -->
+    <section class="idle-view d-none" id="view-idle">
+      <div class="wallet-card">
+        <span class="wallet-balance-label">Local Vault Balance</span>
+        <span class="wallet-balance-value" id="wallet-balance-val">₹0.00</span>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-top:0.5rem;">
+          <div class="wallet-address" id="wallet-address-badge" title="Click to copy wallet address">
+            <span id="wallet-address-short">Loading...</span>
+            <svg style="width:14px;height:14px;fill:currentColor" viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/></svg>
+          </div>
+          <button class="topup-pill-btn" id="btn-vault-topup">
+            💳 Top Up
+          </button>
+        </div>
+
+        <div class="metamask-info-section d-none" id="metamask-info-badge">
+          <span>Connected MetaMask:</span>
+          <span id="metamask-address-text">0x...</span>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <div class="input-group">
+          <label for="vendor-ip">Vendor IP Address</label>
+          <input type="text" id="vendor-ip" class="input-field" value="192.168.43.1" placeholder="e.g. 192.168.43.1">
+        </div>
+        <div class="input-group">
+          <label for="vendor-address">Vendor Monad Address</label>
+          <input type="text" id="vendor-address" class="input-field" value="0x264f3D6883F932f273558ab0cF078d473941F2A4" placeholder="0x...">
+        </div>
+      </div>
+
+      <div class="mic-section">
+        <div class="mic-button-wrapper">
+          <div class="mic-pulse-ring"></div>
+          <button class="mic-button" id="btn-mic">
+            <svg viewBox="0 0 24 24">
+              <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+            </svg>
+          </button>
+        </div>
+        <span class="mic-prompt" id="mic-prompt-text">Tap button to start paying</span>
+      </div>
+    </section>
+
+    <!-- RECORDING SCREEN -->
+    <section class="recording-view d-none" id="view-recording">
+      <div class="text-center">
+        <h2>Listening...</h2>
+        <p class="mt-1">Speak payment instructions in Hindi or English</p>
+      </div>
+
+      <div class="timer-ring-container">
+        <svg class="timer-svg" viewBox="0 0 100 100">
+          <circle class="timer-circle-bg" cx="50" cy="50" r="40"></circle>
+          <circle class="timer-circle-fg" id="timer-circle" cx="50" cy="50" r="40" transform="rotate(-90 50 50)"></circle>
+        </svg>
+        <div class="timer-text" id="timer-countdown-text">8s</div>
+      </div>
+
+      <div class="waveform-circles">
+        <div class="waveform-circle c1"></div>
+        <div class="waveform-circle c2"></div>
+        <div class="waveform-circle c3"></div>
+      </div>
+
+      <span class="mic-prompt" id="btn-recording-stop" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:0.5rem 1rem; border-radius:99px; border:1px solid var(--color-card-border)">
+        Tap to Stop early
+      </span>
+    </section>
+
+    <!-- CONFIRM SCREEN -->
+    <section class="confirm-view d-none" id="view-confirm">
+      <div>
+        <div class="payment-details">
+          <p>Sending USDX Voucher</p>
+          <div class="payment-amount" id="confirm-amount">₹35</div>
+          <div class="payment-item-recipient mt-1">
+            <span id="confirm-item-label">for Product</span>
+            <span id="confirm-recipient-label">to Bhaiya</span>
+          </div>
+          <div class="payment-vendor" id="confirm-vendor-label">to Chai Wala</div>
+          <div class="payment-vendor-addr" id="confirm-vendor-address">0x264f3D...F2A4</div>
+        </div>
+
+        <div class="glass-panel text-center" id="confirm-transcription-box">
+          <p class="mb-1" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Speech Detected</p>
+          <span style="font-style: italic" id="confirm-transcription">"pay thirty five rupees"</span>
+        </div>
+      </div>
+
+      <div class="swipe-track" id="swipe-track">
+        <div class="swipe-glow-bg"></div>
+        <div class="swipe-arrow">
+          <svg style="width:24px;height:24px;fill:currentColor" viewBox="0 0 24 24"><path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z"/></svg>
+        </div>
+        <div class="swipe-text">SWIPE UP TO CONFIRM</div>
+        <div class="swipe-handle" id="swipe-handle">
+          <svg viewBox="0 0 24 24">
+            <path d="M12,18A6,6 0 1,1 18,12A6,6 0 0,1 12,18M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary mt-1" id="btn-confirm-cancel">Cancel Payment</button>
+    </section>
+
+    <!-- SUCCESS OVERLAY -->
+    <div class="overlay" id="overlay-success">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div>
+        <h2 id="success-title">Payment Signed</h2>
+        <p class="mt-1" id="success-message">Your voucher has been signed and transferred to the vendor successfully.</p>
+      </div>
+      <button class="btn btn-primary d-none" id="btn-success-close">Done</button>
+    </div>
+  </div>
+
+  <!-- Main JavaScript bundle -->
+  <script type="module" src="/src/main.js"></script>
+
+  <!-- Inline service worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('ServiceWorker registered:', reg.scope))
+          .catch(err => console.error('ServiceWorker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

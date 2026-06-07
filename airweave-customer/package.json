@@ -1,0 +1,18 @@
+{
+  "name": "airweave-customer",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.0.2",
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "vite": "^5.2.11",
+    "vite-plugin-mkcert": "^1.17.5"
+  }
+}

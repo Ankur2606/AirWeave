@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirWeave Vendor Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --color-bg: #090b11;
+      --color-surface: rgba(255, 255, 255, 0.03);
+      --color-border: rgba(255, 255, 255, 0.06);
+      --color-primary: #3b82f6;
+      --color-primary-glow: rgba(59, 130, 246, 0.15);
+      --color-accent: #6366f1;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-text-main: #f8fafc;
+      --color-text-sub: #94a3b8;
+      --color-text-muted: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 5% 5%, rgba(99, 102, 241, 0.1) 0%, transparent 30%),
+        radial-gradient(circle at 95% 95%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* Header styling */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-ring {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .logo-ring svg {
+      width: 26px;
+      height: 26px;
+      fill: #fff;
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 40%, var(--color-text-sub) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+      padding: 0.5rem 1rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-success);
+      box-shadow: 0 0 10px var(--color-success);
+    }
+
+    /* Grid layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 800px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 320px;
+      }
+    }
+
+    /* Cards styling */
+    .glass-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Balances & Stats */
+    .stats-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-sub);
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+
+    .stat-value.green {
+      color: var(--color-success);
+      text-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+    }
+
+    /* QR Code Display */
+    .qr-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .qr-image-wrapper {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: inline-block;
+    }
+
+    .qr-image {
+      display: block;
+      width: 180px;
+      height: 180px;
+    }
+
+    .qr-info {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .qr-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .vendor-ip-box {
+      font-family: monospace;
+      font-size: 0.9rem;
+      padding: 0.6rem 1rem;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+    }
+
+    .vendor-address-box {
+      font-family: monospace;
+      font-size: 0.8rem;
+      word-break: break-all;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 0.5rem;
+      border-radius: 10px;
+      border: 1px dashed var(--color-border);
+      color: var(--color-text-sub);
+    }
+
+    /* Vouchers Table */
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .table-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: var(--color-text-sub);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: var(--color-text-main);
+    }
+
+    .address-cell {
+      font-family: monospace;
+      color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    .sig-cell {
+      font-family: monospace;
+      color: var(--color-text-sub);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-pending {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--color-warning);
+    }
+
+    .badge-settled {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--color-text-sub);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo-ring">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">AirWeave Vendor</h1>
+      </div>
+      <div class="server-status">
+        <span class="status-dot"></span> Live Server
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Left side stats + history -->
+      <div class="main-column">
+        <div class="glass-card stats-container">
+          <div class="stat-box">
+            <span class="stat-label">Pending Balance</span>
+            <span class="stat-value green" id="inr-balance">₹0.00</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Vouchers Received</span>
+            <span class="stat-value" id="voucher-count">0</span>
+          </div>
+        </div>
+
+        <div class="glass-card mt-2">
+          <div class="table-header">
+            <h2 class="table-title">Received Payment Vouchers</h2>
+          </div>
+          
+          <div class="table-wrapper">
+            <table id="vouchers-table">
+              <thead>
+                <tr>
+                  <th>From (Customer)</th>
+                  <th>Amount</th>
+                  <th>Product/Item</th>
+                  <th>Recipient</th>
+                  <th>Nonce</th>
+                  <th>Signature</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="vouchers-tbody">
+                <!-- Vouchers will list here dynamically -->
+                <tr>
+                  <td colspan="7" class="empty-state">Waiting for offline payments...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side Connection / QR -->
+      <div class="side-column">
+        <div class="glass-card qr-card">
+          <div class="qr-info">
+            <h3 class="qr-title">Customer Scan</h3>
+            <p>Scan to pre-fill vendor address & connect via local WiFi network</p>
+          </div>
+          <div class="qr-image-wrapper">
+            <img id="qr-image" src="" alt="Vendor QR Code" class="qr-image">
+          </div>
+          <div class="qr-info">
+            <span class="stat-label">Vendor IP Address</span>
+            <div class="vendor-ip-box" id="vendor-ip">Loading...</div>
+            <span class="stat-label mt-1">Vendor Wallet</span>
+            <div class="vendor-address-box" id="vendor-address">0x...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/src/ui.js"></script>
+</body>
+</html>

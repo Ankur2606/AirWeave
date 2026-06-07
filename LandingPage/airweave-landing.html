@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AirWeave — Pay Without Signal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+  --bg:       #07090e;
+  --bg2:      #0c0f17;
+  --surface:  #111520;
+  --border:   rgba(0,229,192,0.1);
+  --teal:     #00e5c0;
+  --orange:   #ff4f1f;
+  --white:    #f0f4f8;
+  --muted:    #4a5568;
+  --grid:     rgba(0,229,192,0.035);
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── GLOW ORBS ── */
+.orb1, .orb2, .orb3 {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 20s ease-in-out infinite;
+}
+.orb1 { width: 600px; height: 600px; background: rgba(0,229,192,0.06); top: -200px; right: -150px; animation-delay: 0s; }
+.orb2 { width: 400px; height: 400px; background: rgba(255,79,31,0.05); bottom: 200px; left: -100px; animation-delay: -7s; }
+.orb3 { width: 300px; height: 300px; background: rgba(0,229,192,0.04); top: 50%; left: 50%; animation-delay: -14s; }
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(30px, -20px); }
+  66%       { transform: translate(-20px, 30px); }
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(7,9,14,0.85);
+  backdrop-filter: blur(20px);
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  text-decoration: none;
+}
+
+.nav-logo span { color: var(--white); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--teal); }
+
+.nav-cta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: transparent;
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  padding: 8px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.nav-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--teal);
+  transform: translateX(-100%);
+  transition: transform 0.25s;
+  z-index: -1;
+}
+.nav-cta:hover::before { transform: translateX(0); }
+.nav-cta:hover { color: var(--bg); }
+
+/* ── SECTION WRAPPER ── */
+section { position: relative; z-index: 1; }
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 100px;
+  overflow: hidden;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  width: 100%;
+}
+
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--teal);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-label::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--teal);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 8vw, 120px);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  margin-bottom: 32px;
+}
+
+.hero-title .accent { color: var(--teal); display: block; }
+.hero-title .sub { color: var(--orange); display: block; }
+
+.hero-desc {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(240,244,248,0.6);
+  max-width: 420px;
+  margin-bottom: 40px;
+  font-weight: 300;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: var(--teal);
+  color: var(--bg);
+  border: none;
+  padding: 16px 32px;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.btn-primary:hover { transform: translate(-2px, -2px); }
+.btn-primary:hover::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: glitch 0.15s steps(2) forwards;
+}
+
+@keyframes glitch {
+  0%   { clip-path: inset(20% 0 60% 0); transform: translateX(4px); }
+  25%  { clip-path: inset(60% 0 20% 0); transform: translateX(-4px); }
+  50%  { clip-path: inset(40% 0 40% 0); transform: translateX(2px); }
+  100% { clip-path: inset(0); transform: translateX(0); }
+}
+
+.btn-ghost {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 16px 0;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-ghost:hover { color: var(--white); }
+.btn-ghost::after { content: '→'; transition: transform 0.2s; }
+.btn-ghost:hover::after { transform: translateX(4px); }
+
+/* Hero right — terminal */
+.hero-terminal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.3);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #ff5f57; }
+.dot.y { background: #ffbd2e; }
+.dot.g { background: #28ca41; }
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.terminal-body { padding: 24px; }
+
+.t-line {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+  margin-bottom: 4px;
+  opacity: 0;
+  animation: fadein 0.3s forwards;
+}
+.t-line:nth-child(1)  { animation-delay: 0.2s; }
+.t-line:nth-child(2)  { animation-delay: 0.5s; }
+.t-line:nth-child(3)  { animation-delay: 0.8s; }
+.t-line:nth-child(4)  { animation-delay: 1.1s; }
+.t-line:nth-child(5)  { animation-delay: 1.4s; }
+.t-line:nth-child(6)  { animation-delay: 1.7s; }
+.t-line:nth-child(7)  { animation-delay: 2.0s; }
+.t-line:nth-child(8)  { animation-delay: 2.3s; }
+.t-line:nth-child(9)  { animation-delay: 2.6s; }
+.t-line:nth-child(10) { animation-delay: 2.9s; }
+.t-line:nth-child(11) { animation-delay: 3.2s; }
+.t-line:nth-child(12) { animation-delay: 3.5s; }
+
+@keyframes fadein { to { opacity: 1; } }
+
+.t-prompt { color: var(--teal); }
+.t-cmd    { color: var(--white); }
+.t-out    { color: rgba(240,244,248,0.45); }
+.t-ok     { color: var(--teal); }
+.t-err    { color: var(--orange); }
+.t-val    { color: #fbbf24; }
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--teal);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.stats-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.stat {
+  flex: 1;
+  padding: 0 48px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat:last-child { border-right: none; }
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 1;
+  color: var(--teal);
+  letter-spacing: 0.02em;
+}
+.stat-num .unit { font-size: 24px; color: var(--orange); }
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+}
+
+/* ── STORY SECTION ── */
+#story {
+  padding: 120px 0;
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--orange);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.section-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  max-width: 120px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 5vw, 80px);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 16px;
+  color: var(--white);
+}
+.section-title .teal { color: var(--teal); }
+
+.story-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+  margin-top: 60px;
+}
+
+.story-text p {
+  font-size: 16px;
+  line-height: 1.9;
+  color: rgba(240,244,248,0.65);
+  margin-bottom: 20px;
+  font-weight: 300;
+}
+
+.story-text p strong {
+  color: var(--white);
+  font-weight: 500;
+}
+
+.story-highlight {
+  border-left: 2px solid var(--teal);
+  padding: 20px 24px;
+  background: rgba(0,229,192,0.04);
+  margin: 32px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--teal);
+}
+
+/* India map / visual */
+.story-visual {
+  position: sticky;
+  top: 120px;
+}
+
+.map-container {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-container::before {
+  content: 'INDIA — CONNECTIVITY MAP';
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+
+.india-svg {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
+  opacity: 0.4;
+}
+
+.ping-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+.ping-dot::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid var(--orange);
+  animation: ping 2s ease-out infinite;
+}
+.ping-dot::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1px solid var(--orange);
+  animation: ping 2s ease-out infinite 0.4s;
+}
+@keyframes ping {
+  0%   { opacity: 0.8; transform: scale(0.5); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
+/* Kodaikanal marker — approximate south India position */
+.dot-kodai { bottom: 35%; left: 38%; }
+/* Label */
+.location-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+  text-transform: uppercase;
+}
+.label-kodai { bottom: 30%; left: 44%; }
+
+.signal-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-top: 24px;
+  justify-content: center;
+}
+.bar {
+  width: 8px;
+  background: var(--border);
+  border-radius: 1px;
+}
+.bar:nth-child(1) { height: 8px;  background: var(--orange); }
+.bar:nth-child(2) { height: 14px; background: var(--orange); }
+.bar:nth-child(3) { height: 20px; }
+.bar:nth-child(4) { height: 26px; }
+
+.signal-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--orange);
+  text-align: center;
+  margin-top: 12px;
+  letter-spacing: 0.1em;
+}
+
+/* ── HOW IT WORKS ── */
+#how {
+  padding: 120px 0;
+  border-top: 1px solid var(--border);
+}
+
+.flow-diagram {
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.flow-row {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  align-items: center;
+  gap: 0;
+}
+
+.flow-step {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 28px 32px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.flow-step:hover { border-color: var(--teal); }
+
+.flow-step-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 10px;
+}
+
+.flow-step-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.flow-step-desc {
+  font-size: 13px;
+  color: rgba(240,244,248,0.5);
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.flow-step-tag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.tag-offline { background: rgba(255,79,31,0.1); color: var(--orange); border: 1px solid rgba(255,79,31,0.2); }
+.tag-online  { background: rgba(0,229,192,0.1); color: var(--teal);   border: 1px solid rgba(0,229,192,0.2); }
+.tag-local   { background: rgba(251,191,36,0.1); color: #fbbf24;      border: 1px solid rgba(251,191,36,0.2); }
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border);
+  font-size: 20px;
+}
+
+.flow-connector {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.flow-connector::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(var(--teal), rgba(0,229,192,0.2));
+}
+.flow-connector::after {
+  content: '▼';
+  font-size: 10px;
+  color: var(--teal);
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  padding: 2px 4px;
+}
+
+/* ── ARCHITECTURE ── */
+#arch {
+  padding: 120px 0;
+  border-top: 1px solid var(--border);
+}
+
+.arch-diagram {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.arch-layer {
+  background: var(--bg2);
+  padding: 32px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.arch-layer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+.layer-1::before { background: var(--orange); }
+.layer-2::before { background: #a855f7; }
+.layer-3::before { background: #3b82f6; }
+.layer-4::before { background: var(--teal); }
+
+.arch-layer-num {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.arch-layer-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+.layer-1 .arch-layer-name { color: var(--orange); }
+.layer-2 .arch-layer-name { color: #a855f7; }
+.layer-3 .arch-layer-name { color: #3b82f6; }
+.layer-4 .arch-layer-name { color: var(--teal); }
+
+.arch-tech {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.arch-tech span {
+  display: block;
+  color: rgba(240,244,248,0.6);
+}
+
+/* data flow animation */
+.data-pulse {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  animation: sweep 3s linear infinite;
+  opacity: 0.4;
+}
+@keyframes sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── TECH STACK ── */
+#tech {
+  padding: 120px 0;
+  border-top: 1px solid var(--border);
+}
+
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  margin-top: 60px;
+  border: 1px solid var(--border);
+}
+
+.tech-card {
+  background: var(--bg2);
+  padding: 36px 32px;
+  transition: background 0.2s;
+  cursor: default;
+}
+.tech-card:hover { background: var(--surface); }
+
+.tech-icon {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.tech-name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.05em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.tech-desc {
+  font-size: 13px;
+  color: rgba(240,244,248,0.45);
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.tech-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  background: rgba(0,229,192,0.08);
+  color: var(--teal);
+  border: 1px solid rgba(0,229,192,0.15);
+  margin-top: 16px;
+}
+
+/* ── SECURITY ── */
+#security {
+  padding: 120px 0;
+  border-top: 1px solid var(--border);
+}
+
+.security-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--border);
+  margin-top: 60px;
+  border: 1px solid var(--border);
+}
+
+.sec-card {
+  background: var(--bg2);
+  padding: 40px;
+}
+
+.sec-num {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 700;
+  color: rgba(0,229,192,0.15);
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.sec-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.05em;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+
+.sec-desc {
+  font-size: 13px;
+  color: rgba(240,244,248,0.45);
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.sec-formula {
+  margin-top: 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--teal);
+  background: rgba(0,229,192,0.05);
+  border: 1px solid rgba(0,229,192,0.1);
+  padding: 12px 16px;
+  border-radius: 0;
+  line-height: 1.6;
+}
+
+/* ── CTA ── */
+#cta {
+  padding: 160px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 800px 400px at 50% 50%, rgba(0,229,192,0.06), transparent);
+  pointer-events: none;
+}
+
+.cta-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--teal);
+  margin-bottom: 24px;
+}
+
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(60px, 7vw, 100px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin-bottom: 32px;
+}
+
+.cta-title .line2 { color: var(--teal); display: block; }
+.cta-title .line3 { color: var(--orange); display: block; }
+
+.cta-subtitle {
+  font-size: 16px;
+  color: rgba(240,244,248,0.5);
+  max-width: 500px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.cta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.btn-large {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: var(--teal);
+  color: var(--bg);
+  border: none;
+  padding: 20px 48px;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+  display: inline-block;
+  transition: all 0.2s;
+  position: relative;
+}
+.btn-large:hover {
+  background: var(--white);
+  transform: translate(-3px, -3px);
+  box-shadow: 3px 3px 0 var(--teal);
+}
+
+.btn-large-ghost {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(240,244,248,0.2);
+  padding: 20px 48px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+.btn-large-ghost:hover { border-color: var(--white); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+}
+.footer-logo span { color: var(--muted); }
+
+.footer-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+.footer-links a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--teal); }
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  .wrap { padding: 0 24px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+  .stats-inner { flex-direction: column; gap: 1px; background: var(--border); }
+  .stat { border-right: none; border-bottom: 1px solid var(--border); }
+  .story-grid { grid-template-columns: 1fr; }
+  .story-visual { display: none; }
+  .arch-diagram { grid-template-columns: 1fr 1fr; }
+  .tech-grid { grid-template-columns: 1fr 1fr; }
+  .security-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 24px; text-align: center; }
+  .footer-meta { text-align: center; }
+}
+
+@media (max-width: 600px) {
+  .arch-diagram { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr; }
+  .flow-row { grid-template-columns: 1fr; }
+  .flow-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="orb1"></div>
+<div class="orb2"></div>
+<div class="orb3"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">Air<span>Weave</span></a>
+  <ul class="nav-links">
+    <li><a href="#story">Story</a></li>
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#arch">Architecture</a></li>
+    <li><a href="#tech">Tech</a></li>
+    <li><a href="#security">Security</a></li>
+  </ul>
+  <a class="nav-cta" href="https://airweaveproject.netlify.app" target="_blank">Try Demo →</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-label">Monad Testnet · Chain ID 10143 · Offline-First</div>
+        <h1 class="hero-title">
+          PAY
+          <span class="accent">WITHOUT</span>
+          <span class="sub">SIGNAL.</span>
+        </h1>
+        <p class="hero-desc">
+          Voice-activated peer-to-peer payments that work deep in Kodaikanal's hills,
+          Munnar's valleys, and anywhere India's cellular grid disappears.
+          No internet. No bank servers. Cryptographically guaranteed.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="https://airweaveproject.netlify.app" target="_blank" data-text="LIVE DEMO">LIVE DEMO →</a>
+          <a class="btn-ghost" href="#story">Read the Story</a>
+        </div>
+      </div>
+
+      <div class="hero-terminal">
+        <div class="terminal-bar">
+          <div class="dot r"></div>
+          <div class="dot y"></div>
+          <div class="dot g"></div>
+          <div class="terminal-title">airweave — payment.log</div>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">▶</span> <span class="t-cmd">// SIGNAL: 0 bars. Kodaikanal hilltop.</span></div>
+          <div class="t-line"><span class="t-out">network_status: OFFLINE</span></div>
+          <div class="t-line"><span class="t-out">upi_status: TIMEOUT</span></div>
+          <div class="t-line"><span class="t-prompt">▶</span> <span class="t-cmd">airweave.listen()</span></div>
+          <div class="t-line"><span class="t-out">// User speaks: "bhaiya ko do 35 rupaye"</span></div>
+          <div class="t-line"><span class="t-ok">STT_ENGINE: Moonshine ONNX [LOCAL]</span></div>
+          <div class="t-line"><span class="t-ok">intent: { amount: 35, currency: "INR" }</span></div>
+          <div class="t-line"><span class="t-prompt">▶</span> <span class="t-cmd">passkey.verify() → biometric ✓</span></div>
+          <div class="t-line"><span class="t-ok">EIP712.sign({ amountINR: 3500, nonce: 7 })</span></div>
+          <div class="t-line"><span class="t-ok">signature: 0x7f3a...b91d <span class="t-val">[OFFLINE MATH]</span></span></div>
+          <div class="t-line"><span class="t-prompt">▶</span> <span class="t-cmd">vendor.receive() → SQLite.save()</span></div>
+          <div class="t-line"><span class="t-ok">VENDOR_LEDGER: +₹35.00 [PENDING]</span></div>
+          <div class="t-line"><span class="t-out">settlement: deferred until connectivity...</span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats-bar">
+  <div class="wrap">
+    <div class="stats-inner">
+      <div class="stat">
+        <div class="stat-num">0<span class="unit">ms</span></div>
+        <div class="stat-label">Internet required at payment time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">450<span class="unit">M</span></div>
+        <div class="stat-label">Indians on unreliable connectivity</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0.4<span class="unit">s</span></div>
+        <div class="stat-label">Monad block time for batch settlement</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100<span class="unit">%</span></div>
+        <div class="stat-label">Cryptographic payment guarantee</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STORY ── -->
+<section id="story">
+  <div class="wrap">
+    <div class="section-eyebrow reveal">The Problem</div>
+    <h2 class="section-title reveal">THE <span class="teal">KODAIKANAL</span><br/>PARADIGM</h2>
+
+    <div class="story-grid">
+      <div class="story-text reveal">
+        <p>
+          <strong>It's monsoon season in Kodaikanal.</strong> Dense cloud canopy,
+          steep ghats, and a tourist influx that overwhelms every cell tower within
+          40 kilometers. The UPI system — India's digital payment miracle — goes silent.
+        </p>
+        <p>
+          A chai vendor stares at his QR code. A tourist stares at a payment timeout.
+          Both have everything they need to complete the transaction — loaded accounts,
+          willing parties — but no signal. The digital payment collapses.
+        </p>
+        <div class="story-highlight">
+          "The merchant has a UPI QR. The tourist has a bank account.<br/>
+          But between them: 0 bars of signal, and ₹35 that can't move."
+        </div>
+        <p>
+          <strong>This is India's digital payment paradox.</strong> UPI reaches 450 million users
+          but fails exactly where the physical world demands it most — high altitude tourist zones,
+          dense forest markets, monsoon-flooded rural corridors.
+        </p>
+        <p>
+          NPCI's UPI Lite attempted this with NFC-based offline micro-transactions.
+          But it requires NFC hardware, bank backend settlement, and a central server
+          that itself needs periodic connectivity. Change the mountain. Don't change the server.
+        </p>
+        <p>
+          <strong>AirWeave solves this at the cryptographic layer.</strong> No bank server.
+          No NFC chip requirement. No central authority. Just mathematics, running locally
+          on the device in your pocket.
+        </p>
+      </div>
+
+      <div class="story-visual">
+        <div class="map-container">
+          <!-- Simplified India silhouette via SVG path -->
+          <svg class="india-svg" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60,20 L80,15 L100,18 L130,25 L150,40 L160,60 L155,80 L165,100 L160,130 L145,155 L130,170 L110,185 L95,200 L85,215 L75,200 L60,180 L50,160 L40,140 L35,115 L40,90 L35,70 L45,50 L55,35 Z" stroke="rgba(0,229,192,0.3)" stroke-width="1" fill="rgba(0,229,192,0.05)"/>
+            <path d="M60,20 L80,15" stroke="rgba(0,229,192,0.2)" stroke-width="0.5"/>
+          </svg>
+
+          <!-- Pulse dot at approximate Tamil Nadu/Kodaikanal -->
+          <div class="ping-dot dot-kodai"></div>
+          <div class="location-label label-kodai">Kodaikanal</div>
+
+          <div class="signal-bars">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <div class="signal-label">2/4 bars — payment impossible with UPI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-eyebrow reveal">The Solution</div>
+    <h2 class="section-title reveal">HOW IT <span class="teal">WORKS</span></h2>
+
+    <div class="flow-diagram reveal">
+
+      <div class="flow-row">
+        <div class="flow-step">
+          <div class="flow-step-tag tag-offline">OFFLINE</div>
+          <div class="flow-step-num">STEP 01</div>
+          <div class="flow-step-title">VOICE CAPTURE</div>
+          <div class="flow-step-desc">User speaks in Hindi, Tamil, or English. "bhaiya ko do 35 rupaye." Moonshine ONNX model runs entirely on-device via WebGPU — no cloud, no API call, no signal required.</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-tag tag-offline">OFFLINE</div>
+          <div class="flow-step-num">STEP 02</div>
+          <div class="flow-step-title">INTENT PARSE</div>
+          <div class="flow-step-desc">Sarvam 105B processes the transcription and extracts structured payment intent: { amount: 35, currency: "INR" }. Falls back to regex parser for pure offline mode. No hallucination risk on numerics.</div>
+        </div>
+      </div>
+
+      <div class="flow-connector"></div>
+
+      <div class="flow-row">
+        <div class="flow-step">
+          <div class="flow-step-tag tag-offline">OFFLINE</div>
+          <div class="flow-step-num">STEP 03</div>
+          <div class="flow-step-title">BIOMETRIC AUTH</div>
+          <div class="flow-step-desc">WebAuthn passkey triggers device biometric — Face ID, fingerprint, or Windows Hello. Private key never leaves the device's secure enclave. Same security model as Apple Pay. Fully offline.</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-tag tag-offline">OFFLINE</div>
+          <div class="flow-step-num">STEP 04</div>
+          <div class="flow-step-title">EIP-712 SIGN</div>
+          <div class="flow-step-desc">Device signs a typed cryptographic voucher: { from, to, amountINR: 3500, nonce: 7, expiry }. Pure secp256k1 elliptic curve math. The signature is a mathematical IOU — unforgeable without the private key.</div>
+        </div>
+      </div>
+
+      <div class="flow-connector"></div>
+
+      <div class="flow-row">
+        <div class="flow-step">
+          <div class="flow-step-tag tag-local">LOCAL P2P</div>
+          <div class="flow-step-num">STEP 05</div>
+          <div class="flow-step-title">HOTSPOT RELAY</div>
+          <div class="flow-step-desc">Signed voucher POSTs to vendor's local server at 192.168.x.x:3000 over WiFi hotspot. Sub-200ms transfer. Zero internet. The vendor's device runs ecrecover locally to verify the signature is mathematically valid.</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-tag tag-local">LOCAL</div>
+          <div class="flow-step-num">STEP 06</div>
+          <div class="flow-step-title">SQLITE ESCROW</div>
+          <div class="flow-step-desc">Verified voucher is committed to vendor's append-only SQLite ledger. Vendor screen shows "₹35.00 PENDING." The signed voucher is the cryptographic proof — valid forever, redeemable on any connection.</div>
+        </div>
+      </div>
+
+      <div class="flow-connector"></div>
+
+      <div class="flow-row">
+        <div class="flow-step" style="grid-column: 1 / -1; max-width: 100%;">
+          <div class="flow-step-tag tag-online">ON CONNECTIVITY</div>
+          <div class="flow-step-num">STEP 07 — FINAL SETTLEMENT</div>
+          <div class="flow-step-title">MONAD PARALLEL BATCH SETTLEMENT</div>
+          <div class="flow-step-desc" style="max-width: 700px;">
+            When the vendor's device detects signal, MonadAirVault contract receives the pending voucher batch.
+            Queries live USD/INR price oracle. Calculates exact USDX required to honor the INR promise.
+            Monad's parallel EVM processes all independent vouchers simultaneously — no state contention,
+            no queue. Entire regional backlog settles inside a single 0.4-second block.
+            Vendor sees: "₹35.00 SETTLED ✓"
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── ARCHITECTURE ── -->
+<section id="arch">
+  <div class="wrap">
+    <div class="section-eyebrow reveal">System Design</div>
+    <h2 class="section-title reveal">FOUR-LAYER <span class="teal">ARCHITECTURE</span></h2>
+
+    <div class="arch-diagram reveal">
+      <div class="arch-layer layer-1">
+        <div class="arch-layer-num">Layer 01</div>
+        <div class="arch-layer-name">LOCAL AI INTELLIGENCE</div>
+        <div class="arch-tech">
+          <span>Moonshine ONNX (WebGPU)</span>
+          <span>Sarvam STT / 105B LLM</span>
+          <span>Regex intent fallback</span>
+          <span>16kHz AudioWorklet</span>
+          <span style="margin-top:8px; color: var(--orange);">— Fully offline —</span>
+        </div>
+        <div class="data-pulse"></div>
+      </div>
+      <div class="arch-layer layer-2">
+        <div class="arch-layer-num">Layer 02</div>
+        <div class="arch-layer-name">CRYPTO SIGNING ENGINE</div>
+        <div class="arch-tech">
+          <span>EIP-712 typed structs</span>
+          <span>secp256k1 ECDSA</span>
+          <span>WebAuthn passkeys</span>
+          <span>ethers.js v6</span>
+          <span style="margin-top:8px; color:#a855f7;">— Secure enclave —</span>
+        </div>
+        <div class="data-pulse" style="animation-delay:0.75s"></div>
+      </div>
+      <div class="arch-layer layer-3">
+        <div class="arch-layer-num">Layer 03</div>
+        <div class="arch-layer-name">LOCAL P2P TRANSPORT</div>
+        <div class="arch-tech">
+          <span>WiFi hotspot mesh</span>
+          <span>Express HTTP server</span>
+          <span>Server-Sent Events</span>
+          <span>better-sqlite3</span>
+          <span style="margin-top:8px; color:#3b82f6;">— LAN only —</span>
+        </div>
+        <div class="data-pulse" style="animation-delay:1.5s"></div>
+      </div>
+      <div class="arch-layer layer-4">
+        <div class="arch-layer-num">Layer 04</div>
+        <div class="arch-layer-name">MONAD SETTLEMENT</div>
+        <div class="arch-tech">
+          <span>MonadAirVault.sol</span>
+          <span>USDX ERC-20 token</span>
+          <span>Parallel EVM batch</span>
+          <span>0.4s block time</span>
+          <span style="margin-top:8px; color:var(--teal);">— Chain ID 10143 —</span>
+        </div>
+        <div class="data-pulse" style="animation-delay:2.25s"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH STACK ── -->
+<section id="tech">
+  <div class="wrap">
+    <div class="section-eyebrow reveal">Built With</div>
+    <h2 class="section-title reveal">THE <span class="teal">STACK</span></h2>
+
+    <div class="tech-grid reveal">
+      <div class="tech-card">
+        <div class="tech-icon">🎙</div>
+        <div class="tech-name">MOONSHINE ONNX</div>
+        <div class="tech-desc">Useful Sensors' edge ASR model running via Transformers.js on WebGPU. Downloads once, runs forever offline. Hindi-English code-switching support.</div>
+        <div class="tech-tag">On-Device AI</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">⛓</div>
+        <div class="tech-name">MONAD EVM</div>
+        <div class="tech-desc">Parallel-execution L1 with MonadDB. Settles entire regional payment backlogs in a single 0.4s block. 10,000 TPS ceiling with zero state contention for independent vouchers.</div>
+        <div class="tech-tag">Chain ID 10143</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🔐</div>
+        <div class="tech-name">EIP-712</div>
+        <div class="tech-desc">Typed structured data signing for offline vouchers. Domain-separated by chain ID to prevent cross-chain replay. ecrecover verification requires zero network access.</div>
+        <div class="tech-tag">Cryptography</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🧬</div>
+        <div class="tech-name">WEBAUTHN</div>
+        <div class="tech-desc">Passkey-based biometric auth using device secure enclave. Works offline. Same security model as Apple Pay. No PIN to type in the rain on a mountain.</div>
+        <div class="tech-tag">Biometric</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">₹</div>
+        <div class="tech-name">USDX + INR PEG</div>
+        <div class="tech-desc">Custom ERC-20 stablecoin deployed on Monad testnet. 1 USDX ≈ 95 INR. Dynamic oracle settlement at chain-time — vendor's INR promise holds regardless of crypto volatility.</div>
+        <div class="tech-tag">Stablecoin</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🗄</div>
+        <div class="tech-name">SQLITE ESCROW</div>
+        <div class="tech-desc">Append-only local ledger on vendor device. Cryptographic voucher stored immediately on receipt. Acts as trustless escrow — no central party, no cloud, no trust required.</div>
+        <div class="tech-tag">Local-First</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECURITY ── -->
+<section id="security">
+  <div class="wrap">
+    <div class="section-eyebrow reveal">Trust Model</div>
+    <h2 class="section-title reveal">FRAUD-<span class="teal">PROOF</span></h2>
+
+    <div class="security-grid reveal">
+      <div class="sec-card">
+        <div class="sec-num">01</div>
+        <div class="sec-title">SIGNATURE FORGERY IMPOSSIBLE</div>
+        <div class="sec-desc">A signed EIP-712 voucher can only be created by the holder of the customer's private key, stored exclusively in the device secure enclave. Intercepting the WiFi payload gives you an unmodifiable blob.</div>
+        <div class="sec-formula">ecrecover(Hash_EIP712, v, r, s) → address<br/>if recovered ≠ voucher.from → REJECTED</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">02</div>
+        <div class="sec-title">NONCE PREVENTS REPLAY</div>
+        <div class="sec-desc">Every voucher carries a strictly incrementing nonce. The smart contract tracks every nonce it has processed per address. Submit the same signed voucher twice and the second attempt reverts: "nonce already used."</div>
+        <div class="sec-formula">require(usedNonces[from][nonce] == false)<br/>usedNonces[from][nonce] = true</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">03</div>
+        <div class="sec-title">OVER-COLLATERALIZED VAULT</div>
+        <div class="sec-desc">Before going offline, users pre-deposit USDX into MonadAirVault. The app caps offline spending at 60% of vault balance — permanent buffer against rate volatility between signing and settlement.</div>
+        <div class="sec-formula">max_offline_spend = vault_balance × 0.60<br/>voucher.amountINR → converted at settlement rate</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">04</div>
+        <div class="sec-title">DYNAMIC INR SETTLEMENT</div>
+        <div class="sec-desc">The vendor's INR promise is locked at signing time. USDX calculation happens on-chain at settlement using a live price oracle — meaning the vendor always receives exactly the promised rupee value, regardless of market movement.</div>
+        <div class="sec-formula">usdx = (amountINR × 1e18) / currentUsdInrRate<br/>vendor guaranteed: ₹ amount = constant</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section id="cta">
+  <div class="wrap">
+    <div class="cta-tag reveal">Live on Monad Testnet · Built at Monad Blitz Bangalore V4</div>
+    <h2 class="cta-title reveal">
+      PAYMENTS
+      <span class="line2">FOR EVERY</span>
+      <span class="line3">HILLTOP.</span>
+    </h2>
+    <p class="cta-subtitle reveal">
+      The chai vendor in Kodaikanal shouldn't lose a sale because a monsoon cloud
+      swallowed the cell signal. AirWeave makes sure they don't.
+    </p>
+    <div class="cta-actions reveal">
+      <a class="btn-large" href="https://airweaveproject.netlify.app" target="_blank">OPEN LIVE DEMO</a>
+      <a class="btn-large-ghost" href="#how">HOW IT WORKS</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">Air<span>Weave</span></div>
+  <ul class="footer-links">
+    <li><a href="#story">Story</a></li>
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#arch">Architecture</a></li>
+    <li><a href="https://airweaveproject.netlify.app" target="_blank">Demo</a></li>
+  </ul>
+  <div class="footer-meta">
+    Built on Monad Testnet · Chain ID 10143<br/>
+    USDX: 0x94C647a5d232769705707925d551E99618E2688c<br/>
+    Monad Blitz Bangalore V4 · June 2026
+  </div>
+</footer>
+
+<script>
+// ── Scroll reveal ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Counter animation ──
+const counters = document.querySelectorAll('.stat-num');
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      countObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.5 });
+
+counters.forEach(c => countObserver.observe(c));
+
+// ── Custom cursor ──
+const cursor = document.createElement('div');
+cursor.style.cssText = `
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background: #00e5c0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s;
+  box-shadow: 0 0 8px #00e5c0;
+`;
+document.body.appendChild(cursor);
+
+const ring = document.createElement('div');
+ring.style.cssText = `
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(0,229,192,0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-10px, -10px);
+  transition: all 0.15s ease;
+`;
+document.body.appendChild(ring);
+
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 2 + 'px';
+  cursor.style.top  = my - 2 + 'px';
+  ring.style.left   = mx - 12 + 'px';
+  ring.style.top    = my - 12 + 'px';
+});
+
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    ring.style.transform = 'scale(1.8)';
+    ring.style.borderColor = 'rgba(255,79,31,0.6)';
+  });
+  el.addEventListener('mouseleave', () => {
+    ring.style.transform = 'scale(1)';
+    ring.style.borderColor = 'rgba(0,229,192,0.4)';
+  });
+});
+
+// ── Glitch text effect on hero title ──
+const title = document.querySelector('.hero-title');
+let glitching = false;
+setInterval(() => {
+  if (glitching) return;
+  glitching = true;
+  title.style.textShadow = '2px 0 #ff4f1f, -2px 0 #00e5c0';
+  setTimeout(() => {
+    title.style.textShadow = '-1px 0 #00e5c0, 1px 0 #ff4f1f';
+    setTimeout(() => {
+      title.style.textShadow = '';
+      glitching = false;
+    }, 80);
+  }, 60);
+}, 4000);
+</script>
+</body>
+</html>
